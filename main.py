@@ -4,10 +4,76 @@ from typing import List, Any, Optional
 # Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
 
 import platform
-print(platform.python_version())
+tt =  {'ul':'┌','um':'┬','ur': '┐', 'ml': '├', 'mm': '┼', 'mr':'┤', 'll':'└', 'lm':'┴', 'lr':'┘', 'b':'│', 'd' :'─'}
+
+def get_shape(rows):
+    #find the size of each column
+    cols = zip(*rows)
+    shape = []
+    for col in cols:
+        shape.append(max([len(str(item)) for item in col])+1)
+    return shape
+
+
+def fix_row(row, shape, centered=False):
+    #add padding to correctly justify each entry in row
+    for i, item in enumerate(row):
+        item = ' ' + str(item)
+        if centered:
+            item = item.center(shape[i]+1) + tt['b']
+        else:
+            item = item.ljust(shape[i]) + ' ' + tt['b']
+        row[i] = item
+    row[0] = tt['b'] + row [0]
+    return row
 
 def make_table(rows: List[List[Any]], labels: Optional[List[Any]] = None, centered: bool = False) -> str:
-    table = []
+
+    # find size of biggest entry in each column
+    shape = get_shape(rows + [labels]) if labels else get_shape(rows)
+
+    #build top of the table
+    if labels:
+        top = [tt['ul']]
+        head = [tt['ml']]
+        for i, label in enumerate(labels):
+            top.append(tt['d']*(shape[i]+1))
+            top.append(tt['um'])
+            head.append(tt['d']*(shape[i]+1))
+            head.append(tt['mm'])
+
+        top[-1] = tt['ur']
+        head[-1] = tt['mr']
+        header = ''.join(top) + '\n'
+        labs = fix_row(labels, shape)
+        header = header + ''.join(labs) + '\n'
+        header = header + ''.join(head) + '\n'
+    else:
+        header = tt['ul'] + tt['d'] * (sum(shape) + (len(shape) * 2) - 1) + tt['ur'] + '\n'
+
+    # create and bottom top of table
+    bottom = [tt['ll']]
+    for i in shape:
+        bottom.append(tt['d']*(i+1))
+        bottom.append(tt['lm'])
+    bottom[-1] = tt['lr']
+    foot = ''.join(bottom)
+
+    # middle of table
+    for i, row in enumerate(rows):
+        rows[i] = fix_row(row, shape, centered=centered)
+    for i, row in enumerate(rows):
+        rows[i] = ''.join(row)
+
+    # join 3 sectioins together
+    table = header + '\n'.join(rows) + '\n' + foot
+
+
+
+
+
+
+
     """
     :param rows: 2D list containing objects that have a single-line representation (via `str`).
     All rows must be of the same length.
@@ -18,9 +84,9 @@ def make_table(rows: List[List[Any]], labels: Optional[List[Any]] = None, center
     return table
 
 
-
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
+
     table = make_table(
         rows=[
             ["Lemon"],
